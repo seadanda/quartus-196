@@ -2,8 +2,8 @@
 
 pkgname=quartus-196
 pkgver=16.1.0.196
-pkgrel=0
-pkgdesc="Quartus Prime Standard Edition 16.1 build 196 with Modelsim simulation tool" # with arria 10 FPGAs when I find a dl source
+pkgrel=1
+pkgdesc="Quartus Prime Standard Edition 16.1 build 196 with Modelsim simulation tool"
 arch=('x86_64')
 url="http://dl.altera.com/?edition=standard"
 license=('custom')
@@ -14,7 +14,7 @@ depends=('desktop-file-utils' 'expat' 'fontconfig' 'freetype2' 'glibc'
          'gtk2' 'libcanberra' 'libpng' 'libpng12' 'libice' 'libsm'
          'util-linux' 'ncurses' 'tcl' 'tcllib' 'zlib' 'libx11' 'libxau'
          'libxdmcp' 'libxext' 'libxft' 'libxrender' 'libxt' 'libxtst'
-         'lib32-expat' 'lib32-fontconfig' 'lib32-freetype2' 'lib32-glibc'
+         'lib32-expat' 'lib32-fontconfig<=2.12.6+5+g665584a-1' 'lib32-freetype2' 'lib32-glibc'
          'lib32-gtk2' 'lib32-libcanberra' 'lib32-libpng' 'lib32-libpng12'
          'lib32-libice' 'lib32-libsm' 'lib32-ncurses5-compat-libs'
          'lib32-util-linux' 'lib32-ncurses' 'lib32-zlib' 'lib32-libx11'
@@ -24,7 +24,7 @@ depends=('desktop-file-utils' 'expat' 'fontconfig' 'freetype2' 'glibc'
 
 source=("http://download.altera.com/akdlm/software/acdsinst/16.1/${pkgver##*.}/ib_installers/QuartusSetup-${pkgver}-linux.run"
         "http://download.altera.com/akdlm/software/acdsinst/16.1/${pkgver##*.}/ib_installers/ModelSimSetup-${pkgver}-linux.run"
-	      "quartus" "quartus.desktop" "quartus.install" "quartus.sh" "51-usbblaster.rules")
+	      "quartus" "quartus.desktop" "quartus.install" "quartus.sh" "modelsim" "51-usbblaster.rules")
 md5sums=('d8a1730c18f2d79eb080786fffe2e203'
          'f665d7016ff793e64f57b08b37487d0e'
          '4d5a388355a2a62c658709e0ba63edea'
@@ -54,10 +54,16 @@ package() {
     rm -r "${pkgdir}/${_alteradir}/logs"
 
     # Fix broken vsim deps
-    echo "sed -i \"s,linux_rh60,linux,q\" \"${pkgdir}/${_alteradir}/modelsim\_ase/bin/vsim\""
+    sed -i "s,linux\_rh60,linux,g" "${pkgdir}/${_alteradir}/modelsim\_ase/bin/vsim"
+
+    # Fix broken font support
+    cp -rf lib32 ${pkgdir}/${_alteradir}/lib32
+    sed -i "51iexport LD\_LIBRARY\_PATH=${_alteradir}/lib32" "${pkgdir}/${_alteradir}/modelsim\_ase/bin/vsim"
 
     # Replace altera directory in integration files
     sed -i.bak "s,_alteradir,${_alteradir},g" quartus.sh
+    sed -i.bak "s,_alteradir,${_alteradir},g" quartus
+    sed -i.bak "s,_alteradir,${_alteradir},g" modelsim
 
     # Copy license file
     install -D -m644 "${pkgdir}/${_alteradir}/licenses/license.txt" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
@@ -65,6 +71,7 @@ package() {
     # Install integration files
     install -D -m755 quartus.sh "${pkgdir}/etc/profile.d/quartus.sh"
     install -D -m755 quartus "${pkgdir}/usr/bin/quartus"
+    install -D -m755 modelsim "${pkgdir}/usr/bin/modelsim"
     install -D -m644 51-usbblaster.rules "${pkgdir}/etc/udev/rules.d/51-usbblaster.rules"
     install -D -m644 quartus.desktop "${pkgdir}/usr/share/applications/quartus.desktop"
 }
