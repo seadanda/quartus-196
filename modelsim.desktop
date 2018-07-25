@@ -1,8 +1,8 @@
 [Desktop Entry]
 Version=1.0
-Name=Quartus II
-Comment=Quartus II design software for Altera FPGA's
-Exec=quartus
+Name=Modelsim
+Comment=Modelsim simulation software
+Exec=modelsim
 Icon=_alteradir/quartus/adm/quartusii.png
 Terminal=false
 Type=Application
